@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  server-check:
+    name: Server syntax check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: Syntax-check all server files
+        run: |
+          find . -name "*.js" -not -path "./node_modules/*" | \
+          xargs -I{} node --check {}
+          echo "✅ Server syntax OK"
+
+  client-build:
+    name: Client lint + build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: Lint
+        run: npm run lint || true   # non-blocking in CI until lint rules are firmed up
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_URL: https://textile-api.onrender.com/api
