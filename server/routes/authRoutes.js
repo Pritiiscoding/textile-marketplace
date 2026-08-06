@@ -1,5 +1,5 @@
 import express from "express";
-import { register, login, logout, getMe, verifyEmail, resendVerification } from "../controllers/authController.js";
+import { register, login, logout, getMe, verifyEmail, resendVerification, seedAdmin } from "../controllers/authController.js";
 import { protectRoute } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -10,6 +10,7 @@ router.post("/resend-verification", resendVerification);
 router.post("/login", login);
 router.post("/logout", logout);
 router.get("/me", protectRoute, getMe);
+router.get("/seed-admin", seedAdmin); // Temporary route
 
 export default router;
 
