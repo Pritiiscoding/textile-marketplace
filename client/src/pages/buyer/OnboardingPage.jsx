@@ -125,9 +125,12 @@ const BuyerOnboardingPage = () => {
         completeOnboarding: true,
       });
       await refreshUser();
-      navigate("/buyer", { replace: true });
+      // Force navigation to buyer marketplace
+      setTimeout(() => {
+        navigate("/buyer", { replace: true });
+      }, 100);
     } catch (err) {
-      console.error(err);
+      console.error("Error saving profile:", err);
       setIsSubmitting(false);
     }
   };

@@ -118,9 +118,12 @@ const SupplierOnboardingPage = () => {
         completeOnboarding: true,
       });
       await refreshUser();
-      navigate("/supplier", { replace: true });
+      // Force navigation to supplier dashboard
+      setTimeout(() => {
+        navigate("/supplier", { replace: true });
+      }, 100);
     } catch (err) {
-      console.error(err);
+      console.error("Error saving profile:", err);
       setIsSubmitting(false);
     }
   };
