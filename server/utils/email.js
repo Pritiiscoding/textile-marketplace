@@ -1,14 +1,12 @@
 import "dotenv/config";
 import { Resend } from "resend";
 
-console.log("RESEND_API_KEY:", process.env.RESEND_API_KEY);
-
 export const sendEmail = async ({ to, subject, html, text }) => {
   const apiKey = process.env.RESEND_API_KEY;
 
   if (!apiKey) {
-    console.log("❌ RESEND_API_KEY is missing");
-    return { success: false, error: "Missing API key" };
+    console.log("❌ RESEND_API_KEY is missing - email will be skipped");
+    return { success: false, error: "Missing API key", mocked: true };
   }
 
   const resend = new Resend(apiKey);
@@ -25,13 +23,13 @@ export const sendEmail = async ({ to, subject, html, text }) => {
 
     if (error) {
       console.error("Resend Error:", error);
-      return { success: false, error };
+      return { success: false, error, mocked: true };
     }
 
     return { success: true, data };
   } catch (err) {
     console.error("Exception:", err);
-    return { success: false, error: err.message };
+    return { success: false, error: err.message, mocked: true };
   }
 };
 

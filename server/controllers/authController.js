@@ -51,13 +51,13 @@ export const register = async (req, res) => {
     const verifyUrl = `${clientUrl}/verify/${verificationToken}`;
 
     const response = {
-      message: emailResult?.sent
+      message: emailResult?.sent && !emailResult?.mocked
         ? "Registration successful. Please check your email to verify your account."
         : "Registration successful. Please verify your account using the link below.",
     };
 
     // If email failed to send (e.g. Resend unverified domain or missing SMTP), return verifyUrl in response
-    if (!emailResult?.sent) {
+    if (!emailResult?.sent || emailResult?.mocked) {
       response.devVerifyUrl = verifyUrl;
     }
 
@@ -121,13 +121,14 @@ export const resendVerification = async (req, res) => {
     const verifyUrl = `${clientUrl}/verify/${verificationToken}`;
 
     const response = {
-      message: emailResult?.sent
+      message: emailResult?.sent && !emailResult?.mocked
         ? "Verification email resent. Please check your inbox."
         : "Verification email resent. Please verify your account using the link below.",
     };
 
-    if (!emailResult?.sent && process.env.NODE_ENV !== "production") {
-      response.verifyUrl = verifyUrl;
+    // Always return verifyUrl if email failed or was mocked
+    if (!emailResult?.sent || emailResult?.mocked) {
+      response.devVerifyUrl = verifyUrl;
     }
 
     return res.status(200).json(response);
