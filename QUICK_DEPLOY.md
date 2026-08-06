@@ -65,10 +65,12 @@ git push -u origin main
 4. Copy the connection string
 5. Replace `<password>` with your database password
 
-**Example connection string:**
+**Connection string format:**
 ```
-mongodb+srv://your_username:your_password@cluster0.xxxxxx.mongodb.net/textile-marketplace?retryWrites=true&w=majority
+mongodb+srv://[username]:[password]@[cluster-url]/[database]?retryWrites=true&w=majority
 ```
+
+**Important:** Never commit actual credentials to your repository. Always use environment variables.
 
 ## 🌐 Step 3: Deploy Backend to Render
 
