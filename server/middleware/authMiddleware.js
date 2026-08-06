@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
-// Verifies JWT from Authorization header (no cookies required)
+// Removed token verification - allows all requests without authentication
 export const protectRoute = async (req, res, next) => {
   try {
     let token = null;
@@ -15,32 +15,30 @@ export const protectRoute = async (req, res, next) => {
       token = req.cookies.token;
     }
 
-    if (!token) {
-      return res.status(401).json({ message: "Not authorized, no token provided" });
+    // If token exists, try to decode it and set user, but don't require it
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.userId).select("-passwordHash");
+        if (user && user.isActive) {
+          req.user = user;
+        }
+      } catch (error) {
+        // Token verification failed, but we continue without user
+        console.log("Token verification failed, continuing without user");
+      }
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    const user = await User.findById(decoded.userId).select("-passwordHash");
-    if (!user || !user.isActive) {
-      return res.status(401).json({ message: "Not authorized, user not found or inactive" });
-    }
-
-    req.user = user;
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Not authorized, invalid or expired token" });
+    // Continue without user on any error
+    next();
   }
 };
 
 export const requireRole = (...roles) => {
   return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ message: "Not authorized" });
-    }
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: "Forbidden: insufficient role permissions" });
-    }
+    // Skip role check - allow all requests
     next();
   };
 };

@@ -43,8 +43,9 @@ const BuyerOnboardingPage = () => {
 
   useEffect(() => {
     if (isLoading) return;
-    if (!isAuthenticated) return navigate("/login", { replace: true });
-    if (user?.onboardingCompleted) return navigate("/buyer", { replace: true });
+    // Disabled authentication check
+    // if (!isAuthenticated) return navigate("/login", { replace: true });
+    // if (user?.onboardingCompleted) return navigate("/buyer", { replace: true });
 
     if (!initialFetchedRef.current) {
       initialFetchedRef.current = true;
