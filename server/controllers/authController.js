@@ -39,29 +39,13 @@ export const register = async (req, res) => {
       passwordHash,
       role,
       profile: profile || {},
-      verificationToken,
+      verificationToken: null,
+      isVerified: true, // Auto-verify
     });
     
     logActivity({ userId: user._id, userRole: user.role, action: "register", meta: { email: user.email } });
 
-    // Send email via nodemailer (logs verify URL to console in dev if SMTP unavailable)
-    const emailResult = await sendVerificationEmail(user.email, verificationToken);
-
-    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
-    const verifyUrl = `${clientUrl}/verify/${verificationToken}`;
-
-    const response = {
-      message: emailResult?.sent
-        ? "Registration successful. Please check your email to verify your account."
-        : "Registration successful. Please verify your account using the link below.",
-    };
-
-    // If email failed to send (e.g. Resend unverified domain or missing SMTP), return verifyUrl in response
-    if (!emailResult?.sent) {
-      response.devVerifyUrl = verifyUrl;
-    }
-
-    return res.status(201).json(response);
+    return res.status(201).json({ message: "Registration successful. You can now log in." });
   } catch (error) {
     console.error("Register error:", error.message);
     return res.status(500).json({ message: "Server error during registration" });
@@ -150,10 +134,6 @@ export const login = async (req, res) => {
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user || !user.isActive) {
       return res.status(401).json({ message: "Invalid email or password" });
-    }
-
-    if (!user.isVerified) {
-      return res.status(401).json({ message: "Please verify your email before logging in" });
     }
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
