@@ -5,13 +5,26 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(false); // Disabled loading
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Disabled session restoration
+  // On mount, restore session from localStorage token
   const fetchMe = useCallback(async () => {
-    setIsLoading(false);
-    return;
+    // Disabled token check for development
+    // const token = localStorage.getItem("authToken");
+    // if (!token) {
+    //   setIsLoading(false);
+    //   return;
+    // }
+    try {
+      const { data } = await getMeRequest();
+      setUser(data.user);
+    } catch {
+      // localStorage.removeItem("authToken");
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -22,7 +35,8 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       const { data } = await loginRequest({ email, password });
-      if (data.token) localStorage.setItem("authToken", data.token);
+      // Disabled token storage for development
+      // if (data.token) localStorage.setItem("authToken", data.token);
       setUser(data.user);
       return { success: true, user: data.user };
     } catch (err) {
@@ -59,14 +73,15 @@ export const AuthProvider = ({ children }) => {
     try {
       await logoutRequest();
     } finally {
-      localStorage.removeItem("authToken");
+      // Disabled token removal for development
+      // localStorage.removeItem("authToken");
       setUser(null);
     }
   };
 
   const value = {
     user,
-    isAuthenticated: true, // Always return true
+    isAuthenticated: !!user,
     isLoading,
     error,
     login,

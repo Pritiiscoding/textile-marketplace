@@ -5,7 +5,26 @@ import { useAuth } from "../context/AuthContext";
 // <Route element={<ProtectedRoute />}> ...any authenticated user... </Route>
 // <Route element={<ProtectedRoute allowedRoles={['supplier']} />}> ...supplier only... </Route>
 const ProtectedRoute = ({ allowedRoles }) => {
-  // Disabled authentication check - allow all access
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-brand-700">Loading...</p>
+      </div>
+    );
+  }
+
+  // Disabled authentication check for development
+  // if (!isAuthenticated) {
+  //   return <Navigate to="/login" replace />;
+  // }
+
+  // Disabled role check for development
+  // if (allowedRoles && !allowedRoles.includes(user.role)) {
+  //   return <Navigate to="/unauthorized" replace />;
+  // }
+
   return <Outlet />;
 };
 

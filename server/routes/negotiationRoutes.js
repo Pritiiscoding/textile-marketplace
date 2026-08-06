@@ -1,12 +1,11 @@
 import express from "express";
-import { protectRoute } from "../middleware/authMiddleware.js";
 import { startNegotiation, getNegotiations, updateNegotiation, completeNegotiation } from "../controllers/negotiationController.js";
 
 const router = express.Router();
 
-router.post("/", protectRoute, startNegotiation);
-router.get("/", protectRoute, getNegotiations);
-router.patch("/:id", protectRoute, updateNegotiation);
-router.patch("/:id/complete", protectRoute, completeNegotiation);
+router.post("/", startNegotiation);
+router.get("/", getNegotiations);
+router.patch("/:id", updateNegotiation);
+router.patch("/:id/complete", completeNegotiation);
 
 export default router;

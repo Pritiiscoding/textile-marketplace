@@ -39,7 +39,7 @@ const SupplierOnboardingPage = () => {
 
   useEffect(() => {
     if (isLoading) return;
-    // Disabled authentication check
+    // Disabled authentication check for development
     // if (!isAuthenticated) return navigate("/login", { replace: true });
     // if (user?.onboardingCompleted) return navigate("/supplier", { replace: true });
 
@@ -118,11 +118,8 @@ const SupplierOnboardingPage = () => {
         },
         completeOnboarding: true,
       });
-      await refreshUser();
       // Force navigation to supplier dashboard
-      setTimeout(() => {
-        navigate("/supplier", { replace: true });
-      }, 100);
+      navigate("/supplier", { replace: true });
     } catch (err) {
       console.error("Error saving profile:", err);
       setIsSubmitting(false);

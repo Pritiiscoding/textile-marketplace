@@ -7,7 +7,13 @@ const ONBOARDING_PATH = {
 };
 
 const RequireOnboarding = () => {
-  // Disabled onboarding check - allow all access
+  const { user } = useAuth();
+
+  // Disabled onboarding check for development
+  // if (user && !user.onboardingCompleted && ONBOARDING_PATH[user.role]) {
+  //   return <Navigate to={ONBOARDING_PATH[user.role]} replace />;
+  // }
+
   return <Outlet />;
 };
 

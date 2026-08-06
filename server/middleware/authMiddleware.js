@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
-// Removed token verification - allows all requests without authentication
+// Verifies JWT from Authorization header (no cookies required)
 export const protectRoute = async (req, res, next) => {
   try {
     let token = null;
@@ -15,30 +15,37 @@ export const protectRoute = async (req, res, next) => {
       token = req.cookies.token;
     }
 
-    // If token exists, try to decode it and set user, but don't require it
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.userId).select("-passwordHash");
-        if (user && user.isActive) {
-          req.user = user;
-        }
-      } catch (error) {
-        // Token verification failed, but we continue without user
-        console.log("Token verification failed, continuing without user");
-      }
+    // If no token provided, skip verification (disabled for development)
+    if (!token) {
+      req.user = null; // No user attached when no token
+      return next();
     }
 
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.userId).select("-passwordHash");
+    if (!user || !user.isActive) {
+      return res.status(401).json({ message: "Not authorized, user not found or inactive" });
+    }
+
+    req.user = user;
     next();
   } catch (error) {
-    // Continue without user on any error
-    next();
+    // If token verification fails, still allow request (disabled for development)
+    req.user = null;
+    return next();
   }
 };
 
 export const requireRole = (...roles) => {
   return (req, res, next) => {
-    // Skip role check - allow all requests
+    // Skip role check if no user (disabled for development)
+    if (!req.user) {
+      return next();
+    }
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ message: "Forbidden: insufficient role permissions" });
+    }
     next();
   };
 };

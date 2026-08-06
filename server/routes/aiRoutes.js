@@ -1,5 +1,4 @@
 import express from "express";
-import { protectRoute, requireRole } from "../middleware/authMiddleware.js";
 import {
   semanticSearch,
   similarProducts,
@@ -14,17 +13,17 @@ import {
 const router = express.Router();
 
 // Buyer-accessible AI endpoints
-router.post("/search", protectRoute, semanticSearch);
-router.get("/similar/:productId", protectRoute, similarProducts);
-router.get("/recommendations", protectRoute, getRecommendations);
-router.post("/chat", protectRoute, chat);
+router.post("/search", semanticSearch);
+router.get("/similar/:productId", similarProducts);
+router.get("/recommendations", getRecommendations);
+router.post("/chat", chat);
 
 // AI Onboarding & Image AI
-router.post("/onboarding-next", protectRoute, smartOnboardingNext);
-router.post("/analyze-image", protectRoute, analyzeProductImage);
-router.post("/visual-search", protectRoute, visualSearch);
+router.post("/onboarding-next", smartOnboardingNext);
+router.post("/analyze-image", analyzeProductImage);
+router.post("/visual-search", visualSearch);
 
 // Admin / internal — re-embed all products
-router.post("/embed-all", protectRoute, requireRole("admin"), embedAllProducts);
+router.post("/embed-all", embedAllProducts);
 
 export default router;
