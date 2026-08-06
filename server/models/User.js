@@ -50,7 +50,7 @@ const userSchema = new mongoose.Schema(
     },
     isVerified: {
       type: Boolean,
-      default: false,
+      default: true, // Auto-verify all accounts (email verification disabled)
     },
     verificationToken: {
       type: String,
