@@ -23,22 +23,31 @@ const app = express();
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow no-origin requests (mobile apps, curl, Postman)
+      console.log("Incoming Origin:", origin);
+
       if (!origin) return callback(null, true);
-      // Allow localhost
-      if (origin.startsWith("http://localhost:") || origin.startsWith("http://127.0.0.1:")) {
+
+      if (
+        origin.startsWith("http://localhost:") ||
+        origin.startsWith("http://127.0.0.1:")
+      ) {
         return callback(null, true);
       }
-      // Allow configured CLIENT_URL (with or without trailing slash)
+
       if (process.env.CLIENT_URL) {
         const clientUrl = process.env.CLIENT_URL.replace(/\/$/, "");
         if (origin === clientUrl) return callback(null, true);
       }
-      // Allow any Render.com or Vercel.app subdomain
-      if (origin.endsWith(".onrender.com") || origin.endsWith(".vercel.app")) {
+
+      if (
+        origin.endsWith(".onrender.com") ||
+        origin.endsWith(".vercel.app")
+      ) {
         return callback(null, true);
       }
-      callback(new Error("Not allowed by CORS"));
+
+      console.log("Blocked Origin:", origin);
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   })
