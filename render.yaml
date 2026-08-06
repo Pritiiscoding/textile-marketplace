@@ -15,7 +15,7 @@ services:
       - key: JWT_EXPIRES_IN
         value: 7d
       - key: CLIENT_URL
-        value: https://textile-marketplace.vercel.app   # update after Vercel deploy
+        value: https://your-app.vercel.app   # update after Vercel deploy
       - key: GROQ_API_KEY
         sync: false          # for AI chat functionality
       - key: HF_API_KEY
