@@ -78,7 +78,7 @@ const HomePage = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      if (isBuyer && user.onboardingCompleted) {
+      if (isBuyer) {
         navigate(`/buyer?search=${encodeURIComponent(searchQuery.trim())}`);
       } else {
         // Guest search redirects to login
@@ -88,7 +88,7 @@ const HomePage = () => {
   };
 
   const getCategoryLink = (cat) => {
-    if (isAuthenticated && isBuyer && user.onboardingCompleted) {
+    if (isAuthenticated && isBuyer) {
       return `/buyer?category=${encodeURIComponent(cat)}`;
     }
     // Guests can browse but add-to-cart/checkout redirects to login
@@ -119,32 +119,18 @@ const HomePage = () => {
           </p>
 
           {/* CTA / Search */}
-          {isAuthenticated && isBuyer && user.onboardingCompleted ? (
-            <form
-              onSubmit={handleSearch}
-              className="mx-auto mt-10 flex max-w-xl gap-2 animate-fade-in-up"
+          {isAuthenticated && isBuyer ? (
+            <div
+              className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center animate-fade-in-up"
               style={{ animationDelay: "0.2s" }}
             >
-              <div className="relative flex-1">
-                <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search fabrics, categories, suppliers…"
-                  className="w-full rounded-xl border border-white/15 bg-white/10 pl-10 pr-4 py-3.5 text-white placeholder-white/40 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-brand-400/50 focus:border-brand-400/50 transition-all"
-                  id="hero-search"
-                />
-              </div>
-              <button
-                type="submit"
-                className="btn-primary rounded-xl px-6 py-3.5 whitespace-nowrap"
-              >
-                Search
-              </button>
-            </form>
+              <Link to="/buyer" className="btn-primary px-8 py-3.5 text-base rounded-xl">
+                Launch Custom Marketplace
+              </Link>
+              <Link to="/buyer?search=" className="btn-secondary px-8 py-3.5 text-base rounded-xl">
+                Browse Products
+              </Link>
+            </div>
           ) : !isAuthenticated ? (
             <div
               className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center animate-fade-in-up"

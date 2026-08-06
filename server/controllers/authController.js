@@ -43,6 +43,7 @@ export const register = async (req, res) => {
       verificationToken,
       isVerified: true, // Auto-verify for now since email isn't working
       isActive: true,
+      onboardingCompleted: true, // Skip onboarding for now
     });
     
     logActivity({ userId: user._id, userRole: user.role, action: "register", meta: { email: user.email } });

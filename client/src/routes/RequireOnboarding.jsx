@@ -9,9 +9,10 @@ const ONBOARDING_PATH = {
 const RequireOnboarding = () => {
   const { user } = useAuth();
 
-  if (user && !user.onboardingCompleted && ONBOARDING_PATH[user.role]) {
-    return <Navigate to={ONBOARDING_PATH[user.role]} replace />;
-  }
+  // Temporarily skip onboarding requirement to allow immediate access
+  // if (user && !user.onboardingCompleted && ONBOARDING_PATH[user.role]) {
+  //   return <Navigate to={ONBOARDING_PATH[user.role]} replace />;
+  // }
 
   return <Outlet />;
 };
