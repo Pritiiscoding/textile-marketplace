@@ -56,8 +56,16 @@ const RegisterPage = () => {
     const result = await register(payload);
     setIsSubmitting(false);
 
-    if (result.success) {
-      // Always go to login page after successful registration
+    if (result.success && result.autoLoggedIn) {
+      // Auto-logged in — go straight to onboarding
+      if (result.user.role === "supplier") {
+        navigate("/supplier/onboarding", { replace: true });
+      } else if (result.user.role === "buyer") {
+        navigate("/buyer/onboarding", { replace: true });
+      } else {
+        navigate("/login", { replace: true });
+      }
+    } else if (result.success) {
       navigate("/login", { replace: true });
     } else {
       setError(result.message);

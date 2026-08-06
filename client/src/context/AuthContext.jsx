@@ -48,6 +48,12 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       const { data } = await registerRequest(payload);
+      // Auto-login: token is returned immediately after registration
+      if (data.token) {
+        localStorage.setItem("authToken", data.token);
+        setUser(data.user);
+        return { success: true, user: data.user, autoLoggedIn: true };
+      }
       return { success: true, message: data.message };
     } catch (err) {
       const message = err.response?.data?.message || "Registration failed";
