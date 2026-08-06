@@ -13,7 +13,6 @@ import AIChatWidget from "./components/AIChatWidget";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import VerifyEmailPage from "./pages/VerifyEmailPage";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
@@ -59,7 +58,6 @@ const AppContent = () => {
 
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/verify/:token" element={<VerifyEmailPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
         <Route element={<RedirectIfAuthenticated />}>
