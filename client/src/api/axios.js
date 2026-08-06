@@ -7,13 +7,13 @@ if (API_BASE_URL && !API_BASE_URL.endsWith("/api")) {
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true, // send httpOnly cookie
+  withCredentials: false,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Attach token from localStorage as Authorization header (fallback for cross-origin)
+// Always attach token from localStorage as Authorization header
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("authToken");
   if (token) {

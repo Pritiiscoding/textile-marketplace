@@ -1,10 +1,7 @@
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
-import { generateToken, setTokenCookie } from "../utils/generateToken.js";
+import { generateToken } from "../utils/generateToken.js";
 import { logActivity } from "../utils/logActivity.js";
-
-import crypto from "crypto";
-import { sendVerificationEmail } from "../utils/sendEmail.js";
 
 // @route POST /api/auth/register
 export const register = async (req, res) => {
@@ -16,7 +13,7 @@ export const register = async (req, res) => {
     }
 
     if (!["buyer", "supplier"].includes(role)) {
-      return res.status(400).json({ message: "Role must be 'buyer' or 'supplier'. Admin accounts are seeded separately." });
+      return res.status(400).json({ message: "Role must be 'buyer' or 'supplier'." });
     }
 
     if (password.length < 8) {
@@ -30,9 +27,6 @@ export const register = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
-    
-    // Generate verification token
-    const verificationToken = crypto.randomBytes(32).toString("hex");
 
     const user = await User.create({
       email: email.toLowerCase(),
@@ -40,87 +34,25 @@ export const register = async (req, res) => {
       role,
       profile: profile || {},
       verificationToken: null,
-      isVerified: true, // Auto-verify
+      isVerified: true,
+      isActive: true,
     });
-    
+
     logActivity({ userId: user._id, userRole: user.role, action: "register", meta: { email: user.email } });
 
-    return res.status(201).json({ message: "Registration successful. You can now log in." });
+    // Auto-login: return token immediately so frontend can log in without extra step
+    const token = generateToken(user._id, user.role);
+
+    return res.status(201).json({
+      message: "Registration successful.",
+      token,
+      user: user.toSafeObject(),
+    });
   } catch (error) {
     console.error("Register error:", error.message);
     return res.status(500).json({ message: "Server error during registration" });
   }
 };
-
-// @route POST /api/auth/verify-email
-export const verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.body;
-    
-    if (!token) return res.status(400).json({ message: "Invalid token" });
-
-    const user = await User.findOne({ verificationToken: token });
-    
-    if (!user) {
-      return res.status(400).json({ message: "Invalid or expired verification link" });
-    }
-
-    user.isVerified = true;
-    user.verificationToken = null; // consume token
-    await user.save();
-
-    return res.status(200).json({ message: "Email verified successfully. You can now log in." });
-  } catch (error) {
-    console.error("Verification error:", error.message);
-    return res.status(500).json({ message: "Server error during verification" });
-  }
-};
-
-// @route POST /api/auth/resend-verification
-export const resendVerification = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
-    }
-
-    const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user) {
-      return res.status(404).json({ message: "No account found with this email address" });
-    }
-
-    if (user.isVerified) {
-      return res.status(400).json({ message: "This account is already verified. Please sign in." });
-    }
-
-    // Generate fresh token
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-    user.verificationToken = verificationToken;
-    await user.save();
-
-    const emailResult = await sendVerificationEmail(user.email, verificationToken);
-
-    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
-    const verifyUrl = `${clientUrl}/verify/${verificationToken}`;
-
-    const response = {
-      message: emailResult?.sent
-        ? "Verification email resent. Please check your inbox."
-        : "Verification email resent. Please verify your account using the link below.",
-    };
-
-    if (!emailResult?.sent && process.env.NODE_ENV !== "production") {
-      response.verifyUrl = verifyUrl;
-    }
-
-    return res.status(200).json(response);
-  } catch (error) {
-    console.error("Resend verification error:", error.message);
-    return res.status(500).json({ message: "Server error sending verification email" });
-  }
-};
-
 
 // @route POST /api/auth/login
 export const login = async (req, res) => {
@@ -142,9 +74,8 @@ export const login = async (req, res) => {
     }
 
     const token = generateToken(user._id, user.role);
-    setTokenCookie(res, token);
 
-    logActivity({ userId: user._id, userRole: user.role, action: 'login', meta: { email: user.email } });
+    logActivity({ userId: user._id, userRole: user.role, action: "login", meta: { email: user.email } });
 
     return res.status(200).json({
       user: user.toSafeObject(),
@@ -156,13 +87,8 @@ export const login = async (req, res) => {
   }
 };
 
+// @route POST /api/auth/logout
 export const logout = async (req, res) => {
-  const isProd = process.env.NODE_ENV === "production";
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? "none" : "lax",
-  });
   return res.status(200).json({ message: "Logged out successfully" });
 };
 
@@ -171,7 +97,7 @@ export const getMe = async (req, res) => {
   return res.status(200).json({ user: req.user });
 };
 
-// @route GET /api/auth/seed-admin (Temporary fallback)
+// @route GET /api/auth/seed-admin (temporary)
 export const seedAdmin = async (req, res) => {
   try {
     const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@textile.dev";
@@ -179,7 +105,13 @@ export const seedAdmin = async (req, res) => {
 
     const existing = await User.findOne({ email: ADMIN_EMAIL });
     if (existing) {
-      return res.status(200).json({ message: "Admin account already exists!" });
+      // Ensure admin flags are set correctly
+      existing.role = "admin";
+      existing.isVerified = true;
+      existing.isActive = true;
+      existing.onboardingCompleted = true;
+      await existing.save();
+      return res.status(200).json({ message: "Admin account already exists and has been updated!" });
     }
 
     const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
@@ -198,9 +130,18 @@ export const seedAdmin = async (req, res) => {
       },
     });
 
-    return res.status(201).json({ message: "✅ Admin account created successfully!" });
+    return res.status(201).json({ message: `✅ Admin created! Email: ${ADMIN_EMAIL} | Password: ${ADMIN_PASSWORD}` });
   } catch (error) {
     console.error("Seed error:", error.message);
     return res.status(500).json({ message: "Server error during seeding" });
   }
+};
+
+// Stubs kept for route compatibility
+export const verifyEmail = async (req, res) => {
+  return res.status(200).json({ message: "Email verification is disabled." });
+};
+
+export const resendVerification = async (req, res) => {
+  return res.status(200).json({ message: "Email verification is disabled." });
 };

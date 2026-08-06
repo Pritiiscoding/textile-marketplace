@@ -1,11 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import {
-  loginRequest,
-  registerRequest,
-  logoutRequest,
-  getMeRequest,
-  resendVerificationRequest,
-} from "../api/authApi";
+import { loginRequest, registerRequest, logoutRequest, getMeRequest } from "../api/authApi";
 
 const AuthContext = createContext(null);
 
@@ -14,11 +8,18 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // On mount, restore session from localStorage token
   const fetchMe = useCallback(async () => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
     try {
       const { data } = await getMeRequest();
       setUser(data.user);
     } catch {
+      localStorage.removeItem("authToken");
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -33,8 +34,8 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       const { data } = await loginRequest({ email, password });
-      setUser(data.user);
       if (data.token) localStorage.setItem("authToken", data.token);
+      setUser(data.user);
       return { success: true, user: data.user };
     } catch (err) {
       const message = err.response?.data?.message || "Login failed";
@@ -47,28 +48,16 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       const { data } = await registerRequest(payload);
-      return {
-        success: true,
-        message: data.message,
-        verifyUrl: data.verifyUrl,
-      };
+      // Auto-login: token is returned immediately after registration
+      if (data.token) {
+        localStorage.setItem("authToken", data.token);
+        setUser(data.user);
+        return { success: true, user: data.user, autoLoggedIn: true };
+      }
+      return { success: true, message: data.message };
     } catch (err) {
       const message = err.response?.data?.message || "Registration failed";
       setError(message);
-      return { success: false, message };
-    }
-  };
-
-  const resendVerification = async (email) => {
-    try {
-      const { data } = await resendVerificationRequest(email);
-      return {
-        success: true,
-        message: data.message,
-        verifyUrl: data.verifyUrl,
-      };
-    } catch (err) {
-      const message = err.response?.data?.message || "Failed to resend verification email";
       return { success: false, message };
     }
   };
@@ -100,7 +89,6 @@ export const AuthProvider = ({ children }) => {
     error,
     login,
     register,
-    resendVerification,
     logout,
     refreshUser,
   };
@@ -115,4 +103,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

@@ -1,13 +1,18 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
-// Verifies JWT (from cookie or Authorization header) and attaches req.user
+// Verifies JWT from Authorization header (no cookies required)
 export const protectRoute = async (req, res, next) => {
   try {
-    let token = req.cookies?.token;
+    let token = null;
 
-    if (!token && req.headers.authorization?.startsWith("Bearer ")) {
+    if (req.headers.authorization?.startsWith("Bearer ")) {
       token = req.headers.authorization.split(" ")[1];
+    }
+
+    // Fallback: cookie (for backward compat)
+    if (!token && req.cookies?.token) {
+      token = req.cookies.token;
     }
 
     if (!token) {
@@ -28,7 +33,6 @@ export const protectRoute = async (req, res, next) => {
   }
 };
 
-// Usage: requireRole('supplier') or requireRole('buyer', 'supplier')
 export const requireRole = (...roles) => {
   return (req, res, next) => {
     if (!req.user) {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import PhoneInput from "../components/PhoneInput";
 
@@ -20,6 +20,7 @@ const ROLES = [
 
 const RegisterPage = () => {
   const { register } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -31,7 +32,6 @@ const RegisterPage = () => {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPass, setShowPass] = useState(false);
-  const [successData, setSuccessData] = useState(null);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -55,100 +55,25 @@ const RegisterPage = () => {
 
     const result = await register(payload);
     setIsSubmitting(false);
-    if (result.success) {
-      setSuccessData(result);
+
+    if (result.success && result.autoLoggedIn) {
+      // Auto-logged in — go straight to onboarding
+      if (result.user.role === "supplier") {
+        navigate("/supplier/onboarding", { replace: true });
+      } else if (result.user.role === "buyer") {
+        navigate("/buyer/onboarding", { replace: true });
+      } else {
+        navigate("/login", { replace: true });
+      }
+    } else if (result.success) {
+      navigate("/login", { replace: true });
     } else {
       setError(result.message);
     }
   };
 
-  const [resendStatus, setResendStatus] = useState(null);
-  const [isResending, setIsResending] = useState(false);
-
-  const handleResend = async () => {
-    setIsResending(true);
-    setResendStatus(null);
-    const res = await resendVerification(form.email);
-    setIsResending(false);
-    setResendStatus(res);
-  };
-
-  // ── Success state ────────────────────────────────────────────
-  if (successData) {
-    const currentVerifyUrl = resendStatus?.verifyUrl || successData.verifyUrl;
-    const currentMsg = resendStatus?.message || successData.message;
-
-    return (
-      <div className="flex min-h-[calc(100vh-60px)] items-center justify-center bg-surface-50 dark:bg-surface-950 px-4 py-12">
-        <div className="w-full max-w-md animate-fade-in-up text-center">
-          <div className="overflow-hidden rounded-3xl bg-white dark:bg-slate-900 shadow-card border border-surface-100 dark:border-slate-800 px-8 py-12">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-3xl shadow-lg">
-              📧
-            </div>
-            <h2 className="mb-3 text-2xl font-bold text-brand-900 dark:text-white">Check your inbox!</h2>
-            <p className="text-sm text-surface-700 dark:text-slate-300 leading-relaxed mb-2">{currentMsg}</p>
-            <p className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-2.5 mb-4">
-              📩 Can't find it? Check your <strong>Spam</strong> or <strong>Junk</strong> folder.
-            </p>
-
-            {resendStatus && (
-              <div className={`mb-4 rounded-xl p-3 text-xs font-semibold ${resendStatus.success ? "bg-emerald-50 text-emerald-800 border border-emerald-200" : "bg-red-50 text-red-800 border border-red-200"}`}>
-                {resendStatus.success ? "✅ " : "⚠️ "}{resendStatus.message}
-              </div>
-            )}
-
-            {currentVerifyUrl && (
-              <div className="mb-6 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 px-4 py-3 text-left text-sm text-amber-800 dark:text-amber-300">
-                <p className="font-semibold mb-1">Development mode — email not sent</p>
-                <p className="mb-2 text-xs">Use this link to verify your account:</p>
-                <a
-                  href={currentVerifyUrl}
-                  className="break-all text-brand-600 dark:text-brand-400 hover:underline font-medium text-xs"
-                >
-                  {currentVerifyUrl}
-                </a>
-              </div>
-            )}
-
-            <div className="space-y-3">
-              <button
-                type="button"
-                id="resend-verification-btn"
-                onClick={handleResend}
-                disabled={isResending}
-                className="w-full py-2.5 px-4 rounded-xl text-sm font-semibold border border-brand-300 dark:border-brand-700 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-slate-800 transition disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isResending ? (
-                  <>
-                    <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Resending verification email…
-                  </>
-                ) : (
-                  "🔄 Resend verification email"
-                )}
-              </button>
-
-              <Link
-                to="/login"
-                id="go-to-login"
-                className="btn-primary w-full py-3 rounded-xl text-base inline-block text-center"
-              >
-                Go to Sign in →
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-
-  // ── Register form ────────────────────────────────────────────
   return (
-    <div className="flex min-h-[calc(100vh-60px)] items-center justify-center bg-surface-50 px-4 py-12">
+    <div className="flex min-h-[calc(100vh-60px)] items-center justify-center bg-surface-50 dark:bg-surface-950 px-4 py-12">
       {/* Background decoration */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div
@@ -162,7 +87,7 @@ const RegisterPage = () => {
       </div>
 
       <div className="w-full max-w-md animate-fade-in-up">
-        <div className="overflow-hidden rounded-3xl bg-white shadow-card border border-surface-100">
+        <div className="overflow-hidden rounded-3xl bg-white dark:bg-slate-900 shadow-card border border-surface-100 dark:border-slate-800">
           {/* Header */}
           <div
             className="px-8 py-8 text-center"
@@ -183,7 +108,7 @@ const RegisterPage = () => {
           {/* Form */}
           <div className="px-8 py-8">
             {error && (
-              <div className="mb-5 flex items-start gap-2.5 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700 animate-fade-in">
+              <div className="mb-5 flex items-start gap-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/50 px-4 py-3 text-sm text-red-700 dark:text-red-300 animate-fade-in">
                 <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
@@ -194,7 +119,7 @@ const RegisterPage = () => {
             <form onSubmit={handleSubmit} className="space-y-5" id="register-form">
               {/* Role selector */}
               <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-surface-700">
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-surface-700 dark:text-slate-400">
                   I am joining as a…
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -204,8 +129,8 @@ const RegisterPage = () => {
                       id={`role-${id}`}
                       className={`cursor-pointer rounded-xl border-2 p-4 text-center transition-all duration-200 ${
                         form.role === id
-                          ? "border-brand-500 bg-brand-50 shadow-glow-sm"
-                          : "border-surface-200 bg-white hover:border-brand-300 hover:bg-surface-50"
+                          ? "border-brand-500 bg-brand-50 dark:bg-brand-900/20 shadow-glow-sm"
+                          : "border-surface-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-brand-300 hover:bg-surface-50"
                       }`}
                     >
                       <input
@@ -217,10 +142,10 @@ const RegisterPage = () => {
                         className="hidden"
                       />
                       <span className="block text-2xl mb-1">{icon}</span>
-                      <span className={`block text-sm font-bold ${form.role === id ? "text-brand-700" : "text-brand-900"}`}>
+                      <span className={`block text-sm font-bold ${form.role === id ? "text-brand-700 dark:text-brand-400" : "text-brand-900 dark:text-white"}`}>
                         {label}
                       </span>
-                      <span className="block text-xs text-surface-700 mt-0.5 leading-tight">{desc}</span>
+                      <span className="block text-xs text-surface-700 dark:text-slate-400 mt-0.5 leading-tight">{desc}</span>
                     </label>
                   ))}
                 </div>
@@ -228,7 +153,7 @@ const RegisterPage = () => {
 
               {/* Email */}
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-surface-700" htmlFor="reg-email">
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-surface-700 dark:text-slate-400" htmlFor="reg-email">
                   Email address
                 </label>
                 <input
@@ -245,8 +170,8 @@ const RegisterPage = () => {
 
               {/* Password */}
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-surface-700" htmlFor="reg-password">
-                  Password <span className="normal-case text-surface-700 font-normal">(min. 8 characters)</span>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-surface-700 dark:text-slate-400" htmlFor="reg-password">
+                  Password <span className="normal-case text-surface-700 dark:text-slate-500 font-normal">(min. 8 characters)</span>
                 </label>
                 <div className="relative">
                   <input
@@ -283,7 +208,7 @@ const RegisterPage = () => {
               {/* Company name — suppliers only */}
               {form.role === "supplier" && (
                 <div className="animate-fade-in">
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-surface-700" htmlFor="reg-company">
+                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-surface-700 dark:text-slate-400" htmlFor="reg-company">
                     Company name
                   </label>
                   <input
@@ -301,7 +226,7 @@ const RegisterPage = () => {
 
               {/* Contact name */}
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-surface-700" htmlFor="reg-contact">
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-surface-700 dark:text-slate-400" htmlFor="reg-contact">
                   Contact name
                 </label>
                 <input
@@ -317,8 +242,8 @@ const RegisterPage = () => {
 
               {/* Phone */}
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-surface-700" htmlFor="reg-phone">
-                  Phone <span className="normal-case text-surface-700 font-normal">(optional)</span>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-surface-700 dark:text-slate-400" htmlFor="reg-phone">
+                  Phone <span className="normal-case text-surface-700 dark:text-slate-500 font-normal">(optional)</span>
                 </label>
                 <PhoneInput
                   id="reg-phone"
@@ -347,7 +272,7 @@ const RegisterPage = () => {
               </button>
             </form>
 
-            <p className="mt-6 text-center text-sm text-surface-700">
+            <p className="mt-6 text-center text-sm text-surface-700 dark:text-slate-400">
               Already have an account?{" "}
               <Link to="/login" className="font-semibold text-brand-600 hover:text-brand-700 hover:underline transition">
                 Sign in
@@ -357,7 +282,7 @@ const RegisterPage = () => {
         </div>
 
         {/* Trust badges */}
-        <div className="mt-6 flex items-center justify-center gap-6 text-xs text-surface-700">
+        <div className="mt-6 flex items-center justify-center gap-6 text-xs text-surface-700 dark:text-slate-500">
           <span className="flex items-center gap-1"><span>🔒</span> SSL Secured</span>
           <span className="flex items-center gap-1"><span>✅</span> Verified Platform</span>
           <span className="flex items-center gap-1"><span>🏭</span> B2B Focused</span>

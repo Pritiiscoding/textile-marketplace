@@ -6,12 +6,5 @@ export const generateToken = (userId, role) => {
   });
 };
 
-export const setTokenCookie = (res, token) => {
-  const isProd = process.env.NODE_ENV === "production";
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? "none" : "lax", // none required for cross-origin (Vercel <-> Render)
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  });
-};
+// No-op: token is now sent in response body only (no cookies needed)
+export const setTokenCookie = (res, token) => {};

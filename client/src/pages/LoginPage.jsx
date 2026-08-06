@@ -3,43 +3,20 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const LoginPage = () => {
-  const { login, resendVerification } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPass, setShowPass] = useState(false);
-  const [isResending, setIsResending] = useState(false);
-  const [resendMessage, setResendMessage] = useState(null);
-  const [devVerifyUrl, setDevVerifyUrl] = useState(null);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleResend = async () => {
-    if (!form.email) {
-      setError("Please enter your email address to resend verification link.");
-      return;
-    }
-    setIsResending(true);
-    setResendMessage(null);
-    setDevVerifyUrl(null);
-    const res = await resendVerification(form.email);
-    setIsResending(false);
-    if (res.success) {
-      setResendMessage(res.message);
-      if (res.verifyUrl) setDevVerifyUrl(res.verifyUrl);
-    } else {
-      setError(res.message);
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setResendMessage(null);
-    setDevVerifyUrl(null);
     setIsSubmitting(true);
     const result = await login(form.email, form.password);
     setIsSubmitting(false);
@@ -58,8 +35,6 @@ const LoginPage = () => {
       setError(result.message);
     }
   };
-
-  const isUnverifiedError = error && error.toLowerCase().includes("verify your email");
 
   return (
     <div className="flex min-h-[calc(100vh-60px)] items-center justify-center bg-surface-50 dark:bg-surface-950 px-4 py-12">
@@ -103,43 +78,14 @@ const LoginPage = () => {
                   <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-400" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
-                  <div>
-                    <p>{error}</p>
-                    {isUnverifiedError && (
-                      <button
-                        type="button"
-                        id="resend-from-login-btn"
-                        onClick={handleResend}
-                        disabled={isResending}
-                        className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 underline hover:text-brand-700"
-                      >
-                        {isResending ? "Resending..." : "Click here to resend verification email →"}
-                      </button>
-                    )}
-                  </div>
+                  <p>{error}</p>
                 </div>
               </div>
             )}
 
-            {resendMessage && (
-              <div className="mb-5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-300 animate-fade-in">
-                ✅ {resendMessage}
-              </div>
-            )}
-
-            {devVerifyUrl && (
-              <div className="mb-5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 px-4 py-3 text-xs text-amber-800 dark:text-amber-300">
-                <p className="font-semibold mb-1">Development mode — email not sent</p>
-                <a href={devVerifyUrl} className="break-all text-brand-600 dark:text-brand-400 font-medium underline">
-                  {devVerifyUrl}
-                </a>
-              </div>
-            )}
-
-
             <form onSubmit={handleSubmit} className="space-y-5" id="login-form">
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-surface-700" htmlFor="login-email">
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-surface-700 dark:text-slate-400" htmlFor="login-email">
                   Email address
                 </label>
                 <input
@@ -155,7 +101,7 @@ const LoginPage = () => {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-surface-700" htmlFor="login-password">
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-surface-700 dark:text-slate-400" htmlFor="login-password">
                   Password
                 </label>
                 <div className="relative">
@@ -210,7 +156,7 @@ const LoginPage = () => {
               </button>
             </form>
 
-            <p className="mt-6 text-center text-sm text-surface-700">
+            <p className="mt-6 text-center text-sm text-surface-700 dark:text-slate-400">
               Don't have an account?{" "}
               <Link to="/register" className="font-semibold text-brand-600 hover:text-brand-700 hover:underline transition">
                 Create one free
@@ -220,7 +166,7 @@ const LoginPage = () => {
         </div>
 
         {/* Trust badges */}
-        <div className="mt-6 flex items-center justify-center gap-6 text-xs text-surface-700">
+        <div className="mt-6 flex items-center justify-center gap-6 text-xs text-surface-700 dark:text-slate-500">
           <span className="flex items-center gap-1"><span>🔒</span> SSL Secured</span>
           <span className="flex items-center gap-1"><span>✅</span> Verified Platform</span>
           <span className="flex items-center gap-1"><span>🏭</span> B2B Focused</span>
