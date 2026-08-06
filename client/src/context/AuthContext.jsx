@@ -34,6 +34,10 @@ export const AuthProvider = ({ children }) => {
     try {
       const { data } = await loginRequest({ email, password });
       setUser(data.user);
+      // Store token as fallback for cross-origin
+      if (data.token) {
+        localStorage.setItem("auth_token", data.token);
+      }
       return { success: true, user: data.user };
     } catch (err) {
       const message = err.response?.data?.message || "Login failed";
@@ -46,6 +50,11 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       const { data } = await registerRequest(payload);
+      setUser(data.user);
+      // Store token as fallback for cross-origin
+      if (data.token) {
+        localStorage.setItem("auth_token", data.token);
+      }
       return {
         success: true,
         message: data.message,
@@ -88,6 +97,7 @@ export const AuthProvider = ({ children }) => {
       await logoutRequest();
     } finally {
       setUser(null);
+      localStorage.removeItem("auth_token");
     }
   };
 

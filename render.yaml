@@ -11,7 +11,7 @@ services:
       - key: MONGO_URI
         sync: false
       - key: JWT_SECRET
-        sync: false
+        value: textile_marketplace_secure_secret_key_2024_production
       - key: JWT_EXPIRES_IN
         value: 7d
       - key: CLIENT_URL
@@ -21,9 +21,9 @@ services:
       - key: HF_API_KEY
         sync: false
       - key: ADMIN_EMAIL
-        sync: false
+        value: admin@textile.dev
       - key: ADMIN_PASSWORD
-        sync: false
+        value: Admin1234!
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT

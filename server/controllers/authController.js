@@ -187,6 +187,8 @@ export const login = async (req, res) => {
     return res.status(200).json({
       user: user.toSafeObject(),
       token,
+      // Include token in response for cross-origin compatibility
+      authType: "cookie",
     });
   } catch (error) {
     console.error("Login error:", error.message);
@@ -198,7 +200,8 @@ export const logout = async (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: "none",
+    domain: process.env.NODE_ENV === "production" ? ".onrender.com" : undefined,
   });
   return res.status(200).json({ message: "Logged out successfully" });
 };
