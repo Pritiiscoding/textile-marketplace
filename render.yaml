@@ -9,17 +9,17 @@ services:
       - key: NODE_ENV
         value: production
       - key: MONGO_URI
-        sync: false          # set in Render dashboard
+        sync: false
       - key: JWT_SECRET
         sync: false
       - key: JWT_EXPIRES_IN
         value: 7d
       - key: CLIENT_URL
-        value: https://your-app.vercel.app   # update after Vercel deploy
+        sync: false
       - key: GROQ_API_KEY
-        sync: false          # for AI chat functionality
+        sync: false
       - key: HF_API_KEY
-        sync: false          # optional — AI degrades gracefully without it
+        sync: false
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_PASSWORD
