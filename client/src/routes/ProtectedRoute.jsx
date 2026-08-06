@@ -7,13 +7,14 @@ import { useAuth } from "../context/AuthContext";
 const ProtectedRoute = ({ allowedRoles }) => {
   const { user, isAuthenticated, isLoading } = useAuth();
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-brand-700">Loading...</p>
-      </div>
-    );
-  }
+  // Disabled loading check for development
+  // if (isLoading) {
+  //   return (
+  //     <div className="flex min-h-screen items-center justify-center">
+  //       <p className="text-brand-700">Loading...</p>
+  //     </div>
+  //   );
+  // }
 
   // Disabled authentication check for development
   // if (!isAuthenticated) {
