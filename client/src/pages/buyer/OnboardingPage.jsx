@@ -128,7 +128,6 @@ const BuyerOnboardingPage = () => {
       navigate("/buyer", { replace: true });
     } catch (err) {
       console.error(err);
-    } finally {
       setIsSubmitting(false);
     }
   };
