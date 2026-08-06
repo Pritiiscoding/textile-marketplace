@@ -29,12 +29,13 @@ app.use(
       if (origin.startsWith("http://localhost:") || origin.startsWith("http://127.0.0.1:")) {
         return callback(null, true);
       }
-      // Allow configured CLIENT_URL
-      if (process.env.CLIENT_URL && origin === process.env.CLIENT_URL) {
-        return callback(null, true);
+      // Allow configured CLIENT_URL (with or without trailing slash)
+      if (process.env.CLIENT_URL) {
+        const clientUrl = process.env.CLIENT_URL.replace(/\/$/, "");
+        if (origin === clientUrl) return callback(null, true);
       }
-      // Allow any Render.com subdomain
-      if (origin.endsWith(".onrender.com")) {
+      // Allow any Render.com or Vercel.app subdomain
+      if (origin.endsWith(".onrender.com") || origin.endsWith(".vercel.app")) {
         return callback(null, true);
       }
       callback(new Error("Not allowed by CORS"));
