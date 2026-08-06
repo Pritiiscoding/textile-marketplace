@@ -1,17 +1,40 @@
-import { createContext, useContext, useState, useCallback } from "react";
-import { loginRequest, registerRequest, logoutRequest } from "../api/authApi";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { loginRequest, registerRequest, logoutRequest, getMeRequest } from "../api/authApi";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // On mount, restore session from localStorage token
+  const fetchMe = useCallback(async () => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+    try {
+      const { data } = await getMeRequest();
+      setUser(data.user);
+    } catch {
+      localStorage.removeItem("authToken");
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchMe();
+  }, [fetchMe]);
 
   const login = async (email, password) => {
     setError(null);
     try {
       const { data } = await loginRequest({ email, password });
+      if (data.token) localStorage.setItem("authToken", data.token);
       setUser(data.user);
       return { success: true, user: data.user };
     } catch (err) {
@@ -34,13 +57,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   const refreshUser = useCallback(async () => {
-    return null;
+    try {
+      const { data } = await getMeRequest();
+      setUser(data.user);
+      return data.user;
+    } catch {
+      setUser(null);
+      return null;
+    }
   }, []);
 
   const logout = async () => {
     try {
       await logoutRequest();
     } finally {
+      localStorage.removeItem("authToken");
       setUser(null);
     }
   };

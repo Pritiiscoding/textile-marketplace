@@ -39,9 +39,8 @@ const SupplierOnboardingPage = () => {
 
   useEffect(() => {
     if (isLoading) return;
-    // Disabled authentication check for development
-    // if (!isAuthenticated) return navigate("/login", { replace: true });
-    // if (user?.onboardingCompleted) return navigate("/supplier", { replace: true });
+    if (!isAuthenticated) return navigate("/login", { replace: true });
+    if (user?.onboardingCompleted) return navigate("/supplier", { replace: true });
 
     if (!initialFetchedRef.current) {
       initialFetchedRef.current = true;
@@ -118,10 +117,10 @@ const SupplierOnboardingPage = () => {
         },
         completeOnboarding: true,
       });
-      // Force navigation to supplier dashboard
+      await refreshUser();
       navigate("/supplier", { replace: true });
     } catch (err) {
-      console.error("Error saving profile:", err);
+      console.error(err);
       setIsSubmitting(false);
     }
   };

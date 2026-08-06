@@ -9,10 +9,9 @@ const ONBOARDING_PATH = {
 const RequireOnboarding = () => {
   const { user } = useAuth();
 
-  // Disabled onboarding check for development
-  // if (user && !user.onboardingCompleted && ONBOARDING_PATH[user.role]) {
-  //   return <Navigate to={ONBOARDING_PATH[user.role]} replace />;
-  // }
+  if (user && !user.onboardingCompleted && ONBOARDING_PATH[user.role]) {
+    return <Navigate to={ONBOARDING_PATH[user.role]} replace />;
+  }
 
   return <Outlet />;
 };

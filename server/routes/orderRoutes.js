@@ -1,4 +1,5 @@
 import express from "express";
+import { protectRoute, requireRole } from "../middleware/authMiddleware.js";
 import {
   getSupplierOrders,
   getOrderById,
@@ -11,15 +12,17 @@ import {
 const router = express.Router();
 
 // Buyer-only checkout + order history
-router.post("/checkout", createOrdersFromCart);
-router.get("/mine", getBuyerOrders);
-router.get("/mine/:id", getBuyerOrderById);
+router.post("/checkout", protectRoute, requireRole("buyer"), createOrdersFromCart);
+router.get("/mine", protectRoute, requireRole("buyer"), getBuyerOrders);
+router.get("/mine/:id", protectRoute, requireRole("buyer"), getBuyerOrderById);
 
 // Supplier-only order management
-router.get("/supplier", getSupplierOrders);
-router.get("/:id", getOrderById);
+router.get("/supplier", protectRoute, requireRole("supplier"), getSupplierOrders);
+router.get("/:id", protectRoute, requireRole("supplier"), getOrderById);
 router.patch(
   "/:id/status",
+  protectRoute,
+  requireRole("supplier"),
   updateOrderStatus
 );
 

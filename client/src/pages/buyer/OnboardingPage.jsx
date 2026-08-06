@@ -43,9 +43,8 @@ const BuyerOnboardingPage = () => {
 
   useEffect(() => {
     if (isLoading) return;
-    // Disabled authentication check for development
-    // if (!isAuthenticated) return navigate("/login", { replace: true });
-    // if (user?.onboardingCompleted) return navigate("/buyer", { replace: true });
+    if (!isAuthenticated) return navigate("/login", { replace: true });
+    if (user?.onboardingCompleted) return navigate("/buyer", { replace: true });
 
     if (!initialFetchedRef.current) {
       initialFetchedRef.current = true;
@@ -125,10 +124,10 @@ const BuyerOnboardingPage = () => {
         },
         completeOnboarding: true,
       });
-      // Force navigation to buyer marketplace
+      await refreshUser();
       navigate("/buyer", { replace: true });
     } catch (err) {
-      console.error("Error saving profile:", err);
+      console.error(err);
       setIsSubmitting(false);
     }
   };

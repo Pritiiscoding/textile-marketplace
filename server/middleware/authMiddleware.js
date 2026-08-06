@@ -15,10 +15,8 @@ export const protectRoute = async (req, res, next) => {
       token = req.cookies.token;
     }
 
-    // If no token provided, skip verification (disabled for development)
     if (!token) {
-      req.user = null; // No user attached when no token
-      return next();
+      return res.status(401).json({ message: "Not authorized, no token provided" });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -31,17 +29,14 @@ export const protectRoute = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
-    // If token verification fails, still allow request (disabled for development)
-    req.user = null;
-    return next();
+    return res.status(401).json({ message: "Not authorized, invalid or expired token" });
   }
 };
 
 export const requireRole = (...roles) => {
   return (req, res, next) => {
-    // Skip role check if no user (disabled for development)
     if (!req.user) {
-      return next();
+      return res.status(401).json({ message: "Not authorized" });
     }
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({ message: "Forbidden: insufficient role permissions" });
