@@ -157,10 +157,11 @@ export const login = async (req, res) => {
 };
 
 export const logout = async (req, res) => {
+  const isProd = process.env.NODE_ENV === "production";
   res.clearCookie("token", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
   });
   return res.status(200).json({ message: "Logged out successfully" });
 };

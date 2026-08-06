@@ -34,6 +34,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const { data } = await loginRequest({ email, password });
       setUser(data.user);
+      if (data.token) localStorage.setItem("authToken", data.token);
       return { success: true, user: data.user };
     } catch (err) {
       const message = err.response?.data?.message || "Login failed";
@@ -87,6 +88,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await logoutRequest();
     } finally {
+      localStorage.removeItem("authToken");
       setUser(null);
     }
   };
