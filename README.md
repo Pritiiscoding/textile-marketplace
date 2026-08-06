@@ -100,19 +100,6 @@ npm run dev:client
 npm run build:client
 ```
 
-## 🚀 Quick Deployment
-
-For step-by-step deployment instructions, see [QUICK_DEPLOY.md](./QUICK_DEPLOY.md).
-
-**Quick Summary:**
-1. Push code to GitHub
-2. Deploy backend to Render (Web Service)
-3. Deploy frontend to Vercel
-4. Set environment variables
-5. Test and go live!
-
-For detailed deployment options and troubleshooting, see [DEPLOYMENT.md](./DEPLOYMENT.md).
-
 ## Auth flow
 
 - `POST /api/auth/register` — creates a user (`role: buyer|supplier`), returns user + sets JWT httpOnly cookie
@@ -198,12 +185,6 @@ All of the above routes are supplier-only, enforced both by `requireRole("suppli
 1. Server syntax check — `node --check` on every `.js` file
 2. Client lint + build — `npm run lint && npm run build`
 
-**Deployment Guide**
-
-For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
-
-**Quick Deployment Summary:**
-
 **Vercel (client deployment)**
 1. Connect your GitHub repo to Vercel, set root directory to `client`
 2. Framework preset: Vite
@@ -213,7 +194,7 @@ For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
 **Render (server deployment)**
 1. Create a new Web Service, set root directory to `server`
 2. Build command: `npm install`, Start command: `npm start`
-3. Add env vars (see `render.yaml`): `MONGO_URI`, `JWT_SECRET`, `CLIENT_URL`, `GROQ_API_KEY`, etc.
+3. Add env vars (see `render.yaml`): `MONGO_URI`, `JWT_SECRET`, `CLIENT_URL`, optionally `HF_API_KEY`
 4. After deploy, run `npm run seed:admin` once via Render Shell to create the admin account
 5. The `render.yaml` in the repo root documents all required vars for reference
 

@@ -25,7 +25,6 @@ export const register = async (req, res) => {
 
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
-      console.log("Registration failed: Email already exists:", email.toLowerCase());
       return res.status(409).json({ message: "An account with this email already exists" });
     }
 
@@ -41,16 +40,9 @@ export const register = async (req, res) => {
       role,
       profile: profile || {},
       verificationToken,
-      isVerified: true, // Auto-verify for now since email isn't working
-      isActive: true,
-      onboardingCompleted: true, // Skip onboarding for now
     });
     
     logActivity({ userId: user._id, userRole: user.role, action: "register", meta: { email: user.email } });
-
-    // Auto-login user after registration
-    const token = generateToken(user._id, user.role);
-    setTokenCookie(res, token);
 
     // Send email via nodemailer (logs verify URL to console in dev if SMTP unavailable)
     const emailResult = await sendVerificationEmail(user.email, verificationToken);
@@ -59,14 +51,14 @@ export const register = async (req, res) => {
     const verifyUrl = `${clientUrl}/verify/${verificationToken}`;
 
     const response = {
-      message: "Registration successful! You are now logged in.",
-      user: user.toSafeObject(),
-      token,
+      message: emailResult?.sent
+        ? "Registration successful. Please check your email to verify your account."
+        : "Registration successful. Please verify your account using the link below.",
     };
 
-    // If email succeeded, include verification info
-    if (emailResult?.sent && !emailResult?.mocked) {
-      response.message = "Registration successful. Please check your email to verify your account.";
+    // If email failed to send (e.g. Resend unverified domain or missing SMTP), return verifyUrl in response
+    if (!emailResult?.sent) {
+      response.devVerifyUrl = verifyUrl;
     }
 
     return res.status(201).json(response);
@@ -129,14 +121,13 @@ export const resendVerification = async (req, res) => {
     const verifyUrl = `${clientUrl}/verify/${verificationToken}`;
 
     const response = {
-      message: emailResult?.sent && !emailResult?.mocked
+      message: emailResult?.sent
         ? "Verification email resent. Please check your inbox."
         : "Verification email resent. Please verify your account using the link below.",
     };
 
-    // Always return verifyUrl if email failed or was mocked
-    if (!emailResult?.sent || emailResult?.mocked) {
-      response.devVerifyUrl = verifyUrl;
+    if (!emailResult?.sent && process.env.NODE_ENV !== "production") {
+      response.verifyUrl = verifyUrl;
     }
 
     return res.status(200).json(response);
@@ -157,24 +148,16 @@ export const login = async (req, res) => {
     }
 
     const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user) {
-      console.log("Login failed: User not found for email:", email.toLowerCase());
+    if (!user || !user.isActive) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    if (!user.isActive) {
-      console.log("Login failed: User is not active:", email.toLowerCase());
-      return res.status(401).json({ message: "Account is not active. Please contact support." });
+    if (!user.isVerified) {
+      return res.status(401).json({ message: "Please verify your email before logging in" });
     }
-
-    // Skip email verification check for now - will be re-enabled when email is properly configured
-    // if (!user.isVerified) {
-    //   return res.status(401).json({ message: "Please verify your email before logging in" });
-    // }
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
-      console.log("Login failed: Password mismatch for email:", email.toLowerCase());
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
@@ -183,12 +166,9 @@ export const login = async (req, res) => {
 
     logActivity({ userId: user._id, userRole: user.role, action: 'login', meta: { email: user.email } });
 
-    console.log("Login successful for:", email.toLowerCase());
     return res.status(200).json({
       user: user.toSafeObject(),
       token,
-      // Include token in response for cross-origin compatibility
-      authType: "cookie",
     });
   } catch (error) {
     console.error("Login error:", error.message);
@@ -200,8 +180,7 @@ export const logout = async (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "none",
-    domain: process.env.NODE_ENV === "production" ? ".onrender.com" : undefined,
+    sameSite: "lax",
   });
   return res.status(200).json({ message: "Logged out successfully" });
 };

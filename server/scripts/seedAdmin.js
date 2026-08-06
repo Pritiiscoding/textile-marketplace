@@ -25,9 +25,6 @@ async function seed() {
   const existing = await User.findOne({ email: ADMIN_EMAIL });
 
   if (existing) {
-    console.log(`Found existing user: ${ADMIN_EMAIL}`);
-    console.log(`Current role: ${existing.role}, isVerified: ${existing.isVerified}, isActive: ${existing.isActive}`);
-    
     await User.findByIdAndUpdate(existing._id, {
       role: "admin",
       isVerified: true,
@@ -36,7 +33,7 @@ async function seed() {
       verificationToken: null,
     });
 
-    console.log(`✅ Updated admin account: ${ADMIN_EMAIL}`);
+    console.log(`Updated admin account: ${ADMIN_EMAIL}`);
     await mongoose.disconnect();
     return;
   }
@@ -47,10 +44,10 @@ async function seed() {
     email: ADMIN_EMAIL,
     passwordHash,
     role: "admin",
-    isVerified: true,
-    isActive: true,
+    isVerified: true,          // <-- Add this
+    isActive: true,            // <-- Add this
     onboardingCompleted: true,
-    verificationToken: null,
+    verificationToken: null,   // <-- Add this
     profile: {
       companyName: "Textile Marketplace Admin",
       contactName: "Admin",

@@ -1,6 +1,6 @@
 {
   "name": "textile-marketplace-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "B2B textile marketplace API",
   "main": "server.js",
   "type": "module",

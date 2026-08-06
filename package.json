@@ -1,25 +1,13 @@
 {
   "name": "textile-marketplace",
-  "version": "1.0.0",
-  "description": "B2B textile marketplace connecting suppliers with buyers",
+  "version": "1.0.1",
   "private": true,
+  "description": "B2B textile marketplace monorepo (MERN)",
   "scripts": {
-    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
-    "dev:server": "cd server && npm run dev",
-    "dev:client": "cd client && npm run dev",
-    "build:client": "cd client && npm run build",
-    "start:server": "cd server && npm start",
-    "seed:admin": "cd server && npm run seed:admin"
-  },
-  "keywords": [
-    "textile",
-    "marketplace",
-    "b2b",
-    "mern",
-    "react",
-    "express",
-    "mongodb"
-  ],
-  "author": "",
-  "license": "MIT"
+    "install:all": "npm install --prefix server && npm install --prefix client",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "build:client": "npm run build --prefix client",
+    "start:server": "npm start --prefix server"
+  }
 }

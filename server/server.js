@@ -2,6 +2,8 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+console.log("SERVER:", process.env.RESEND_API_KEY);
+
 import http from "http";
 import app from "./app.js";
 import { connectDB } from "./config/db.js";

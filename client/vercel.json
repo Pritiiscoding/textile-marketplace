@@ -5,6 +5,6 @@
   "framework": "vite",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "env": {
-    "VITE_API_URL": "https://textile-marketplace-mpuq.onrender.com/api"
+    "VITE_API_URL": "https://textile-api.onrender.com/api"
   }
 }
