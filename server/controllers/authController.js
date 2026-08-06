@@ -189,3 +189,37 @@ export const logout = async (req, res) => {
 export const getMe = async (req, res) => {
   return res.status(200).json({ user: req.user });
 };
+
+// @route GET /api/auth/seed-admin (Temporary fallback)
+export const seedAdmin = async (req, res) => {
+  try {
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@textile.dev";
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin1234!";
+
+    const existing = await User.findOne({ email: ADMIN_EMAIL });
+    if (existing) {
+      return res.status(200).json({ message: "Admin account already exists!" });
+    }
+
+    const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
+
+    await User.create({
+      email: ADMIN_EMAIL,
+      passwordHash,
+      role: "admin",
+      isVerified: true,
+      isActive: true,
+      onboardingCompleted: true,
+      verificationToken: null,
+      profile: {
+        companyName: "Textile Marketplace Admin",
+        contactName: "Admin",
+      },
+    });
+
+    return res.status(201).json({ message: "✅ Admin account created successfully!" });
+  } catch (error) {
+    console.error("Seed error:", error.message);
+    return res.status(500).json({ message: "Server error during seeding" });
+  }
+};
