@@ -121,7 +121,6 @@ const SupplierOnboardingPage = () => {
       navigate("/supplier", { replace: true });
     } catch (err) {
       console.error(err);
-    } finally {
       setIsSubmitting(false);
     }
   };
