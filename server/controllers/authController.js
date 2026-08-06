@@ -153,9 +153,10 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    if (!user.isVerified) {
-      return res.status(401).json({ message: "Please verify your email before logging in" });
-    }
+    // Skip email verification check for now - will be re-enabled when email is properly configured
+    // if (!user.isVerified) {
+    //   return res.status(401).json({ message: "Please verify your email before logging in" });
+    // }
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {

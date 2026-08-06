@@ -15,7 +15,7 @@ services:
       - key: JWT_EXPIRES_IN
         value: 7d
       - key: CLIENT_URL
-        sync: false
+        value: https://textile-marketplace-priti.vercel.app
       - key: GROQ_API_KEY
         sync: false
       - key: HF_API_KEY

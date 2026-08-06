@@ -37,6 +37,10 @@ app.use(
       if (origin.endsWith(".onrender.com")) {
         return callback(null, true);
       }
+      // Allow any Vercel subdomain
+      if (origin.endsWith(".vercel.app")) {
+        return callback(null, true);
+      }
       callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
