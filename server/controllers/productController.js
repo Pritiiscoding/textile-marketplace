@@ -68,8 +68,14 @@ export const getAllProducts = async (req, res) => {
       Product.countDocuments(filter),
     ]);
 
+    // Normalize image URLs to handle both old relative paths and new full URLs
+    const normalizedProducts = products.map(product => ({
+      ...product.toObject(),
+      images: normalizeImageUrls(product.images, req)
+    }));
+
     return res.status(200).json({
-      products,
+      products: normalizedProducts,
       pagination: {
         page: pageNum,
         limit: limitNum,
@@ -98,6 +104,28 @@ function escapeRegex(str) {
   return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+// Helper function to normalize image URLs to full URLs
+function normalizeImageUrls(images, req) {
+  if (!images || !Array.isArray(images)) return images;
+  
+  const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+  const normalizedBaseUrl = baseUrl.replace(/\/$/, '');
+  
+  return images.map(img => {
+    if (!img) return img;
+    // If it's already a full URL, return as is
+    if (img.startsWith('http://') || img.startsWith('https://')) {
+      return img;
+    }
+    // If it's a relative path starting with /uploads, convert to full URL
+    if (img.startsWith('/uploads')) {
+      return `${normalizedBaseUrl}${img}`;
+    }
+    // Otherwise return as is
+    return img;
+  });
+}
+
 // @route GET /api/products/mine
 // List all products belonging to the logged-in supplier
 export const getMyProducts = async (req, res) => {
@@ -105,7 +133,14 @@ export const getMyProducts = async (req, res) => {
     const products = await Product.find({ supplierId: req.user._id }).sort({
       createdAt: -1,
     });
-    return res.status(200).json({ products });
+    
+    // Normalize image URLs
+    const normalizedProducts = products.map(product => ({
+      ...product.toObject(),
+      images: normalizeImageUrls(product.images, req)
+    }));
+    
+    return res.status(200).json({ products: normalizedProducts });
   } catch (error) {
     console.error("Get my products error:", error.message);
     return res.status(500).json({ message: "Server error fetching products" });
@@ -119,7 +154,13 @@ export const getProductById = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-    return res.status(200).json({ product });
+    // Normalize image URLs
+    const normalizedProduct = {
+      ...product.toObject(),
+      images: normalizeImageUrls(product.images, req)
+    };
+    
+    return res.status(200).json({ product: normalizedProduct });
   } catch (error) {
     return res.status(500).json({ message: "Server error fetching product" });
   }
@@ -138,7 +179,16 @@ export const createProduct = async (req, res) => {
     }
 
     // Generate full URLs for images using the server's base URL
-    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+    // Priority: BASE_URL env var -> construct from request
+    let baseUrl = process.env.BASE_URL;
+    if (!baseUrl) {
+      const protocol = req.protocol || 'http';
+      const host = req.get('host') || 'localhost:5000';
+      baseUrl = `${protocol}://${host}`;
+    }
+    // Remove trailing slash if present
+    baseUrl = baseUrl.replace(/\/$/, '');
+    
     const uploadedImageUrls = (req.files || []).map(
       (file) => `${baseUrl}/uploads/products/${file.filename}`
     );
@@ -201,7 +251,16 @@ export const updateProduct = async (req, res) => {
     }
 
     // Generate full URLs for new images using the server's base URL
-    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+    // Priority: BASE_URL env var -> construct from request
+    let baseUrl = process.env.BASE_URL;
+    if (!baseUrl) {
+      const protocol = req.protocol || 'http';
+      const host = req.get('host') || 'localhost:5000';
+      baseUrl = `${protocol}://${host}`;
+    }
+    // Remove trailing slash if present
+    baseUrl = baseUrl.replace(/\/$/, '');
+    
     const newImageUrls = (req.files || []).map(
       (file) => `${baseUrl}/uploads/products/${file.filename}`
     );

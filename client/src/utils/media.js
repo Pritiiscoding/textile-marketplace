@@ -7,10 +7,17 @@ export const API_ORIGIN = (import.meta.env.VITE_API_URL || "http://localhost:500
 
 export const resolveImageUrl = (path) => {
   if (!path) return null;
+  
   // If it's already a full URL, return it as is
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
-  // Otherwise, resolve it as a relative path
-  return `${API_ORIGIN}${path}`;
+  
+  // If it's a relative path starting with /uploads, resolve it
+  if (path.startsWith('/uploads')) {
+    return `${API_ORIGIN}${path}`;
+  }
+  
+  // Otherwise, treat it as a relative path and resolve it
+  return `${API_ORIGIN}${path.startsWith('/') ? '' : '/'}${path}`;
 };
