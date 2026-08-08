@@ -10,7 +10,7 @@ const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const { itemCount } = useCart();
   const { darkMode, toggleDarkMode } = useTheme();
-  const { notifications, unreadCount, clearNotifications, markAllAsRead } = useSocket();
+  const { notifications, unreadCount, clearNotifications, markAllAsRead, markAsRead: markNotificationAsRead } = useSocket();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -171,6 +171,7 @@ const Navbar = () => {
                           <div
                             key={n.id}
                             onClick={() => {
+                              markNotificationAsRead(n.id);
                               if (n.link) navigate(n.link);
                               setShowNotifMenu(false);
                             }}

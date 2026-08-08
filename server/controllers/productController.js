@@ -137,8 +137,10 @@ export const createProduct = async (req, res) => {
         .json({ message: "name, category, and price are required" });
     }
 
+    // Generate full URLs for images using the server's base URL
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
     const uploadedImageUrls = (req.files || []).map(
-      (file) => `/uploads/products/${file.filename}`
+      (file) => `${baseUrl}/uploads/products/${file.filename}`
     );
 
     const product = await Product.create({
@@ -198,8 +200,10 @@ export const updateProduct = async (req, res) => {
       product.status = status;
     }
 
+    // Generate full URLs for new images using the server's base URL
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
     const newImageUrls = (req.files || []).map(
-      (file) => `/uploads/products/${file.filename}`
+      (file) => `${baseUrl}/uploads/products/${file.filename}`
     );
     if (newImageUrls.length > 0) {
       product.images = [...product.images, ...newImageUrls];
